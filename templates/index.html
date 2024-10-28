@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECB Encryption/Decryption</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #172621, #2A4038);
+        }
+
+        .container {
+            background-color: rgba(0, 13, 13, 0.85);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            text-align: center;
+            color: #c8e6c9;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            color: #a5d6a7;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #4D734C;
+            border-radius: 10px;
+            background-color: #172621;
+            color: #c8e6c9;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #3B593F;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2A4038;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #4D734C;
+        }
+
+        .copy-btn {
+            background-color: #3B593F;
+        }
+
+        .copy-btn:hover {
+            background-color: #4D734C;
+        }
+
+        .error {
+            color: #e57373;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ECB Encryption/Decryption</h1>
+
+        <label for="plaintext">Plaintext:</label>
+        <input type="text" id="plaintext" placeholder="Enter text to encrypt">
+        <div id="plaintext-error" class="error"></div>
+
+        <label for="key">Key (16 characters):</label>
+        <input type="text" id="key" maxlength="16" placeholder="Enter encryption key">
+        <div id="key-error" class="error"></div>
+
+        <button onclick="encryptText()">Encrypt</button>
+
+        <label for="encrypted">Encrypted Text:</label>
+        <input type="text" id="encrypted" placeholder="Encrypted output" readonly>
+        <button class="copy-btn" onclick="copyText()">Copy Encrypted Text</button>
+
+        <button onclick="decryptText()">Decrypt</button>
+
+        <label for="decrypted">Decrypted Text:</label>
+        <input type="text" id="decrypted" placeholder="Decrypted output" readonly>
+    </div>
+
+    <script>
+        function validateInputs(plaintext, key) {
+            let isValid = true;
+            document.getElementById('plaintext-error').textContent = '';
+            document.getElementById('key-error').textContent = '';
+
+            if (!plaintext) {
+                document.getElementById('plaintext-error').textContent = 'Plaintext is required.';
+                isValid = false;
+            }
+            if (key.length !== 16) {
+                document.getElementById('key-error').textContent = 'Key must be exactly 16 characters.';
+                isValid = false;
+            }
+            return isValid;
+        }
+
+        async function encryptText() {
+            const plaintext = document.getElementById('plaintext').value;
+            const key = document.getElementById('key').value;
+
+            if (!validateInputs(plaintext, key)) return;
+
+            const response = await fetch('/encrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plaintext, key })
+            });
+            const data = await response.json();
+            document.getElementById('encrypted').value = data.encrypted;
+        }
+
+        async function decryptText() {
+            const ciphertext = document.getElementById('encrypted').value;
+            const key = document.getElementById('key').value;
+
+            if (!validateInputs(ciphertext, key)) return;
+
+            const response = await fetch('/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ciphertext, key })
+            });
+            const data = await response.json();
+            document.getElementById('decrypted').value = data.decrypted;
+        }
+
+        function copyText() {
+            const encryptedText = document.getElementById('encrypted');
+            encryptedText.select();
+            encryptedText.setSelectionRange(0, 99999);
+
+            navigator.clipboard.writeText(encryptedText.value)
+                .then(() => alert('Encrypted text copied!'))
+                .catch(err => alert('Failed to copy text: ' + err));
+        }
+    </script>
+</body>
+</html>
